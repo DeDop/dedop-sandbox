@@ -13,16 +13,16 @@ Build and run
 
 1. Install Python 3.4.
 2. Install required libs
-
-    > pip install falcon
-    > pip install CherryPy
-
+```
+    $ pip install falcon
+    $ pip install CherryPy
+```
 3. Run
-
-	> cd backend
-	> python setup.py develop
-	> dedopws
-
+```
+    $ cd backend
+    $ python setup.py develop
+    $ dedopws
+```
 Read more:
 
 * WSGI, PEP 3333
@@ -39,14 +39,14 @@ Build and run
 
 1. Install Node.js to get node's package manager ``npm``.
 2. Globally install electron
-
-	> npm install electron-prebuilt -g
-
+```
+    $ npm install electron-prebuilt -g
+```
 3. Run
-
-	> cd frontend
-	> electron .
-
+```
+    $ cd frontend
+    $ electron .
+```
 Read more:
 
 * electron, build cross platform desktop apps with web technologies.
