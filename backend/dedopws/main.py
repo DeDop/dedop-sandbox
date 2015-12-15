@@ -56,7 +56,7 @@ class JobCancellation:
         resp.body = json.dumps(resp_data)
 
 
-def main(args):
+def main(args=sys.argv):
     # Create instance of our DeDop RESTful API called 'api', which is a WSGI application instance.
     api = falcon.API()
     api.add_route('/job/{file_name}/{num_recs}', JobResource())
@@ -70,4 +70,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()
