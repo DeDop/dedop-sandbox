@@ -2,17 +2,33 @@
 
 Contains DeDop Experiments and Prototypes:
 
-* ``dedopws`` -  DeDop RESTful API and WebService
+* ``backend`` -  Hosts the DeDop RESTful API and WebService ``dedopws``, which is implemented as a **Falcon** web app 
+  run in a CherryPy web server.
+* ``frontend`` -  Hosts DeDop GUI ``dedopgui`` which is implemented as an **electron** Desktop application and depends on 
+  a running WebService ``dedopws`` on localhost.
 
-Setup Development
------------------
+## Setup Development
 
+### backend
+
+The backend hosts the DeDeop  implemented 
+Install Python 3.4. Then
+
+	> cd backend
     > pip install falcon
     > pip install CherryPy
+	> python setup.py develop
+	> dedopws
 
+### frontend
 
-See
----
+Install ``node.js`` to get the node package manager ``npm``. Then
+
+	> cd frontend
+	> npm install electron-prebuilt -g
+	> electron .
+
+## Read more
 
 * WSGI, PEP 3333  
 * Falcon is a ridiculously fast, minimalist Python WSGI web framework for building cloud APIs and app backends.
