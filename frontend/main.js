@@ -1,13 +1,15 @@
 'use strict';
 
 const electron = require('electron');
-// see https://www.npmjs.com/package/request-promise
-const rp = require('request-promise');
 const fs = require('fs');
 const path = require('path');
 const child_process = require('child_process');
+// see https://www.npmjs.com/package/request-promise
+const rp = require('request-promise');
+
 const app = electron.app;  // Module to control application life.
 const Menu = electron.Menu;
+const MenuItem = electron.MenuItem;
 const Tray = electron.Tray;
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
 
@@ -65,25 +67,28 @@ app.on('will-quit', function (event) {
 // initialization and is ready to create browser windows.
 app.on('ready', function () {
 
-    // see https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
-    var server = child_process.spawn(serverScript, serverArgs, [0, 1, 2]);
-    server.stdout.on('data', function (data) {
-        console.log(`server: ${data}`);
-    });
+    function startServer() {
+        // see https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
+        var server = child_process.spawn(serverScript, serverArgs, [0, 1, 2]);
 
-    server.stderr.on('data', function (data) {
-        console.log(`server: ${data}`);
-    });
+        server.stdout.on('data', function (data) {
+            console.log(`server: ${data}`);
+        });
 
-    server.on('close', function (code) {
-        console.log(`server exited with code ${code}`);
-    });
+        server.stderr.on('data', function (data) {
+            console.log(`server: ${data}`);
+        });
 
-    server.on('error', function (err) {
-        console.log('failed to start server: ' + err);
-    });
+        server.on('close', function (code) {
+            console.log(`server exited with code ${code}`);
+        });
 
-    var openWindow = function () {
+        server.on('error', function (err) {
+            console.log('failed to start server: ' + err);
+        });
+    }
+
+    function openWindow() {
         appTray = new Tray('images/dedop.png');
         appTray.setToolTip('This is my application.');
         appTray.setContextMenu(Menu.buildFromTemplate([
@@ -119,9 +124,9 @@ app.on('ready', function () {
             appWindow = null;
             appTray = null;
         });
-    };
+    }
 
-    var openWindowAfterServerStarted = function () {
+     function openWindowAfterServerStarted() {
         rp(serverAddress + "info")
             .then(function (response) {
                 console.log('server started: ' + response);
@@ -131,8 +136,9 @@ app.on('ready', function () {
                 console.log('waiting for the server to start... (error: ' + error + ')');
                 openWindowAfterServerStarted();
             });
-    };
+    }
 
     console.log('startUp...');
+    startServer();
     openWindowAfterServerStarted();
 });
