@@ -10,7 +10,7 @@ from dedopws.processor import Job
 
 __version__ = '0.0.1'
 
-DATA_ROOT = 'C:\\Users\\Norman\\CloudStation\\DeDop\\L1A'
+DATA_ROOT = None
 JOBS = {}
 DATASETS = {}
 
@@ -260,6 +260,10 @@ class Info:
 
 
 def main(args=sys.argv):
+
+    global DATA_ROOT
+    DATA_ROOT = args[1]
+
     # Create instance of our DeDop RESTful API called 'api', which is a WSGI application instance.
     api = falcon.API(after=[crossdomain])
     api.add_route('/job/{file_name}/{num_recs}', JobResource())
