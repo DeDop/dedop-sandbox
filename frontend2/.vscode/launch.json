@@ -1,0 +1,36 @@
+/*
+ * All debug configs with type "chrome" are based on the "chrome" extension,
+ * see https://marketplace.visualstudio.com/items/msjsdiag.debugger-for-chrome
+ */
+{
+    "version": "0.1.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "chrome",
+            "request": "launch",
+            "runtimeExecutable": "./node_modules/electron-prebuilt/dist/electron.exe",
+            "runtimeArgs": ["C:\\Users\\Norman\\CloudStation\\Projects\\electron-app"]
+        },
+        /*
+         * The following configs dont work yet, 
+         * see https://github.com/atom/electron/blob/master/docs/tutorial/debugging-main-process.md
+         */
+        {
+            /* Does not work :( */
+            "name": "Debug",
+            "type": "chrome",
+            "request": "launch",
+            "runtimeExecutable": "C:\\Users\\Norman\\AppData\\Roaming\\npm\\node_modules\\electron-prebuilt\\dist\\electron.exe",
+            "runtimeArgs": ["--debug=9222", "C:\\Users\\Norman\\Desktop\\electron-app"]
+        },
+        {
+            /* Does not work :( */
+            "name": "Attach",
+            "type": "chrome",
+            "request": "attach",
+            "port": 9222
+        }
+
+    ]
+}
