@@ -12,6 +12,8 @@ setup(
             'dedopws = dedopws.main:main',
         ]
     },
-    install_requires=['falcon >= 0.3.0',
-                      'CherryPy >= 3.8.0'],
+    install_requires=['netCDF4 >= 1.2',
+                      'numpy >= 1.7',
+                      'falcon >= 0.3',
+                      'CherryPy >= 3.8'],
 )

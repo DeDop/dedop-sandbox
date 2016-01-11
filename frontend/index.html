@@ -1,71 +1,287 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>DeDop</title>
-    <link rel="stylesheet" type="text/css" href="./lib/w2ui-1.4.3.css"/>
-    <script type="text/javascript" src="./lib/require.js"></script>
-    <script type="text/javascript" src="./lib/jquery-2.1.4.js" onload="$ = jQuery = module.exports;"></script>
-    <script type="text/javascript" src="./lib/w2ui-1.4.3.js"></script>
+    <!-- <script src="node_modules/requirejs/require.js"></script> -->
+    <!-- <script src="node_modules/jquery/dist/jquery.js"></script> -->
+
+    <script src="lib/jquery-2.1.4.min.js" onload="$ = jQuery = module.exports;"></script>
+    <script src="lib/plotly-latest.min.js"></script>
+    <!-- The installed plotly.js contains character code errors! <script src="node_modules/plotly.js/dist/plotly.js"></script>-->
+
+    <script src="Cesium-1.16/Build/Cesium/Cesium.js"></script>
+    <!-- The installed Cesium doesn't come with default globe?! <script src="node_modules/cesium/Build/Cesium/Cesium.js"></script> -->
+    <style>
+
+        /*@import url(node_modules/cesium/Build/Cesium/Widgets/widgets.css);*/
+        @import url(Cesium-1.16/Build/Cesium/Widgets/widgets.css);
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        #container {
+            width: 100%;
+            height: 100%;
+        }
+
+        #graphDiv, #earthDiv {
+            display: inline-block;
+            *display: inline;
+            zoom: 1;
+            vertical-align: top;
+            font-size: 12px;
+        }
+
+        #graphDiv {
+            width: 50%;
+            position: absolute;
+            top: 30px;
+            bottom: 0;
+            left: 0;
+        }
+
+        #earthDiv {
+            width: 50%;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+        }
+    </style>
 </head>
 <body>
 
-<script type="text/javascript">
-    // widget configuration
-    var config = {
-        layout: {
-            name: 'layout',
-            padding: 0,
-            panels: [
-                {type: 'left', size: 200, resizable: true, minSize: 120},
-                {
-                    type: 'main', overflow: 'hidden',
-                    style: 'background-color: white; border: 1px solid silver; border-top: 0px; padding: 10px;',
-                    tabs: {
-                        active: 'tab0',
-                        tabs: [{id: 'tab0', caption: 'Initial Tab'}],
-                        onClick: function (event) {
-                            w2ui.layout.html('main', 'Active tab: ' + event.target);
-                        },
-                        onClose: function (event) {
-                            this.click('tab0');
-                        }
-                    }
+<div><label for="recIndex">Record index: </label>
+    <input id="recIndex" onkeyup="if (event.keyCode == 13) setRecIndex()"/>
+    <button id="incButton" onclick="incRecIndex()">+</button>
+    <button id="decButton" onclick="decRecIndex()">-</button>
+    <button id="redrawButton" onclick="redrawPlot()">Redraw</button>
+    <button id="flyButton" onclick="flyToRecord()">Fly To</button>
+</div>
+
+<div id="container">
+    <div id="graphDiv"></div>
+    <div id="earthDiv"></div>
+</div>
+
+<script>
+/*
+    var $, jQuery;
+    var Cesium;
+    var Plotly;
+
+    //$ = jQuery = require("jquery");Cesium = require(["cesium"]);
+    require(["jquery", "plotly.js", "cesium"], function(jquery, plotly, cesium) {
+        $ = jQuery = jquery;
+        Plotly = plotly;
+        Cesium = cesium;
+    });
+*/
+    var productName = "S6_P4_SIM_RAW_L1A__20210929T064000_20210929T064019_T02.nc";
+    var recIndex = 0;
+    var init = false;
+    var graphDiv = null;
+    var viewer = null;
+    var recordDataSource = null;
+    var selectedEntity = null;
+
+    var data = [
+        {
+            z: null,
+            type: 'surface'
+        }
+    ];
+    var layout = {
+        title: productName,
+        autosize: false,
+        width: 800,
+        height: 800,
+        margin: {
+            l: 65,
+            r: 50,
+            b: 65,
+            t: 90
+        }
+    };
+
+    function setRecIndex(index) {
+        var $recIndex = $('#recIndex');
+        if (typeof index == 'number') {
+            recIndex = index;
+            $recIndex.val(index + '');
+        } else {
+            recIndex = parseInt($recIndex.val());
+        }
+        redrawPlot();
+        setSelectedEntity(recIndex);
+    }
+
+    function incRecIndex() {
+        var $recIndex = $('#recIndex');
+        recIndex = parseInt($recIndex.val());
+        recIndex++;
+        $recIndex.val(recIndex + "");
+        redrawPlot();
+        setSelectedEntity(recIndex);
+    }
+
+    function decRecIndex() {
+        var $recIndex = $('#recIndex');
+        recIndex = parseInt($recIndex.val());
+        recIndex--;
+        $recIndex.val(recIndex + "");
+        redrawPlot();
+        setSelectedEntity(recIndex);
+    }
+
+    function redrawPlot() {
+        var url = "http://127.0.0.1:8080/mag/" + productName + "/" + recIndex;
+        $.getJSON(url, function (result) {
+            //console.log(result);
+            if (!init) {
+                data[0].z = result;
+                Plotly.newPlot(graphDiv, data, layout);
+                init = true;
+            } else {
+                graphDiv.data[0].z = result;
+                Plotly.redraw(graphDiv);
+            }
+        });
+    }
+
+    function setSelectedEntity(index) {
+        if (recordDataSource) {
+            if (typeof index == 'number') {
+                selectedEntity = recordDataSource.entities.values[index];
+                if (selectedEntity != viewer.selectedEntity) {
+                    viewer.selectedEntity = selectedEntity;
                 }
-            ]
-        },
-        sidebar: {
-            name: 'sidebar',
-            nodes: [
-                {
-                    id: 'general', text: 'General', group: true, expanded: true, nodes: [
-                    {id: 'item1', text: 'Item 1', img: 'icon-page'},
-                    {id: 'item2', text: 'Item 2', img: 'icon-page'},
-                    {id: 'item3', text: 'Item 3', img: 'icon-page'},
-                    {id: 'item4', text: 'Item 4', img: 'icon-page'}
-                ]
-                }
-            ],
-            onClick: function (event) {
-                var tabs = w2ui.layout_main_tabs;
-                if (tabs.get(event.target)) {
-                    tabs.select(event.target);
-                    w2ui.layout.html('main', 'Tab Selected');
-                } else {
-                    tabs.add({id: event.target, caption: 'Tab ' + event.target, closable: true});
-                    w2ui.layout.html('main', 'New tab added');
+            } else if (viewer.selectedEntity != selectedEntity) {
+                selectedEntity = viewer.selectedEntity;
+                if (selectedEntity && /^rec/.test(selectedEntity.id)) {
+                    index = parseInt(selectedEntity.id.substring(3));
+                    setRecIndex(index);
                 }
             }
         }
     }
 
+    function flyToRecord() {
+        if (recordDataSource) {
+            var entity = recordDataSource.entities.values[recIndex];
+            viewer.flyTo(entity);
+            //viewer.zoomTo(entity);
+        }
+    }
+
+    function addPointPrimitives(points) {
+        var scene = viewer.scene;
+
+        var pointPrimitives = scene.primitives.add(new Cesium.PointPrimitiveCollection());
+        var color = Cesium.Color.LIGHTSKYBLUE;
+        var outlineColor = Cesium.Color.BLACK;
+
+        var numPoints = points.length;
+        for (var i = 0; i < numPoints; ++i) {
+            var point = points[i];
+            var position = new Cesium.Cartesian3.fromDegrees(point[1], point[0], 1000.);
+            pointPrimitives.add({
+                pixelSize: 5,
+                color: color,
+                outlineColor: outlineColor,
+                outlineWidth: 0,
+                position: position
+            });
+        }
+    }
+
+    function addPointDataSource(points) {
+
+        var color = [100, 0, 200, 200];
+        var outlineColor = [200, 0, 200, 200];
+
+        var czml = [{
+            "id": "document",
+            "name": "Positions of " + productName,
+            "version": "1.0"
+        }];
+
+        var numPoints = points.length;
+        for (var i = 0; i < numPoints; i++) {
+            var point = points[i];
+            czml.push({
+                "id": "rec" + i,
+                "name": "Record " + (i + 1),
+                "position": {
+                    "cartographicDegrees": [point[1], point[0], 1000.0]
+                },
+                "point": {
+                    "color": {
+                        "rgba": color
+                    },
+                    "outlineColor": {
+                        "rgba": outlineColor
+                    },
+                    "pixelSize": {
+                        "number": 10
+                    }
+                }
+            });
+        }
+
+        var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
+        viewer.dataSources.add(dataSourcePromise).then(function (dataSource) {
+            recordDataSource = dataSource;
+
+            selectedEntity = recordDataSource.entities.values[recIndex];
+            viewer.selectedEntity = selectedEntity;
+            viewer.flyTo(recordDataSource);
+
+            // We must also listen for selectedEntity changes, i.e. when user clicks entity, then
+            // set the recIndex accordingly.
+            //
+            // However, this code does not work as expected.
+            // var definitionChangedEvent = viewer.selectedEntity.definitionChanged;
+            // definitionChangedEvent.addEventListener(function (property) {
+            //     setSelectedEntity();
+            // });
+            //
+            // This option works, although it uses private API ('_selectedEntity').
+            // see https://github.com/AnalyticalGraphicsInc/cesium/issues/2734
+            Cesium.knockout.getObservable(viewer, '_selectedEntity').subscribe(function(entity) {
+                if (entity !== undefined) {
+                    console.log(entity.id);
+                    setSelectedEntity();
+                }
+            });
+            //
+            // This option works too, but it adds an extra timer to the app (and is an ugly option):
+            // var intervalHandle = setInterval(function() {
+            //     setSelectedEntity();
+            // }, 750);
+        });
+    }
+
     $(function () {
-        // initialization
-        $('#main').w2layout(config.layout);
-        w2ui.layout.content('left', $().w2sidebar(config.sidebar));
+        $('#recIndex').val(recIndex + "");
+        graphDiv = document.getElementById('graphDiv');
+        redrawPlot();
+
+        // Create the viewer.
+        viewer = new Cesium.Viewer('earthDiv');
+
+        var url = "http://127.0.0.1:8080/geoloc/" + productName;
+        $.getJSON(url, function (result) {
+            for (var i = 0; i < result.length; i++) {
+                var p = result[i];
+                p[0] *= 10;
+                p[1] *= 10;
+            }
+            //addPointPrimitives(result);
+            addPointDataSource(result);
+        });
     });
 </script>
-
-<div id="main" style="width: 100%; height: 400px;"></div>
-
 </body>
 </html>

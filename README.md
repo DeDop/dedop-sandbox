@@ -40,6 +40,7 @@ Build and run
 1. Install Node.js to get node's package manager ``npm``.
 2. Globally install electron
 ```
+    $ npm install request-promise -g
     $ npm install electron-prebuilt -g
 ```
 3. Run

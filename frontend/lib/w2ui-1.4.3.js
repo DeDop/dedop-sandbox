@@ -3166,7 +3166,7 @@ w2utils.keyboard = (function (obj) {
             $.extend(params, add_params);
             // event before
             if (cmd == 'get-records') {
-                var eventData = this.trigger({ phase: 'before', type: 'request', target: this.name, url: url, postData: params });
+                var eventData = this.trigger({ phase: 'before', type: 'rp', target: this.name, url: url, postData: params });
                 if (eventData.isCancelled === true) { if (typeof callBack == 'function') callBack({ status: 'error', message: 'Request aborted.' }); return; }
             } else {
                 var eventData = { url: url, postData: params };
@@ -10724,7 +10724,7 @@ var w2confirm = function (msg, title, callBack) {
                         icon            : null,
                         iconStyle       : '',
                         onSearch        : null,         // when search needs to be performed
-                        onRequest       : null,         // when request is submitted
+                        onRequest       : null,         // when rp is submitted
                         onLoad          : null,         // when data is received
                         onError         : null,         // when data fails to load due to server error or other failure modes
                         onIconClick     : null,
@@ -10789,7 +10789,7 @@ var w2confirm = function (msg, title, callBack) {
                         renderItem      : null,          // render selected item
                         style           : '',            // style for container div
                         onSearch        : null,          // when search needs to be performed
-                        onRequest       : null,          // when request is submitted
+                        onRequest       : null,          // when rp is submitted
                         onLoad          : null,          // when data is received
                         onError         : null,          // when data fails to load due to server error or other failure modes
                         onClick         : null,          // when an item is clicked
@@ -11674,7 +11674,7 @@ var w2confirm = function (msg, title, callBack) {
                         max    : options.cacheMax
                     };
                     $.extend(postData, options.postData);
-                    var eventData = obj.trigger({ phase: 'before', type: 'request', target: obj.el, url: url, postData: postData });
+                    var eventData = obj.trigger({ phase: 'before', type: 'rp', target: obj.el, url: url, postData: postData });
                     if (eventData.isCancelled === true) return;
                     url      = eventData.url;
                     postData = eventData.postData;
@@ -12993,7 +12993,7 @@ var w2confirm = function (msg, title, callBack) {
             $.extend(params, this.postData);
             $.extend(params, postData);
             // event before
-            var eventData = this.trigger({ phase: 'before', type: 'request', target: this.name, url: this.url, postData: params });
+            var eventData = this.trigger({ phase: 'before', type: 'rp', target: this.name, url: this.url, postData: params });
             if (eventData.isCancelled === true) { if (typeof callBack == 'function') callBack({ status: 'error', message: 'Request aborted.' }); return; }
             // default action
             this.record   = {};
@@ -13240,7 +13240,7 @@ var w2confirm = function (msg, title, callBack) {
                         // default behavior
                         console.log('ERROR: server communication failed. The server should return', 
                             { status: 'success' }, 'OR', { status: 'error', message: 'error message' }, 
-                            ', instead the AJAX request produced this: ', errorObj);
+                            ', instead the AJAX rp produced this: ', errorObj);
                         // event after
                         obj.trigger($.extend(eventData2, { phase: 'after' }));
                     });

@@ -1877,7 +1877,7 @@ var requirejs, require, define;
     };
 
     /**
-     * Does the request to load a module for the browser case.
+     * Does the rp to load a module for the browser case.
      * Make this a separate function to allow other environments
      * to override it.
      *

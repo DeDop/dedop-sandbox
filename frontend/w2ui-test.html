@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DeDop</title>
+    <link rel="stylesheet" type="text/css" href="./lib/w2ui-1.4.3.css"/>
+    <script src="http://worldwindserver.net/webworldwind/worldwindlib.js"></script>
+    <script src="./lib/require.js"></script>
+    <script src="./lib/jquery-2.1.4.js" onload="$ = jQuery = module.exports;"></script>
+    <script src="./lib/w2ui-1.4.3.js"></script>
+</head>
+<body>
+
+<script type="text/javascript">
+    // widget configuration
+    var config = {
+        layout: {
+            name: 'layout',
+            padding: 0,
+            panels: [{
+                type: 'left',
+                size: 200,
+                resizable: true,
+                minSize: 120
+            }, {
+                type: 'main',
+                overflow: 'hidden',
+                style: 'background-color: white; border: 1px solid silver; border-top: 0px; padding: 10px;',
+                tabs: {
+                    active: 'content',
+                    tabs: [
+                        {id: 'content', caption: 'Content'},
+                        {id: 'globe', caption: 'Globe'}
+                    ],
+                    onClick: function (event) {
+                        if (event.target == 'content') {
+                            showTableContainer();
+                        } else if (event.target == 'globe') {
+                            showWorldContainer();
+                        }
+                    },
+                    onClose: function (event) {
+                        if (event.target == 'content') {
+                            //w2ui.layout.html('main', 'Content');
+                        } else if (event.target == 'globe') {
+                            //hideWorldWindow();
+                        }
+                    }
+                }
+            }
+            ]
+        },
+        sidebar: {
+            name: 'sidebar',
+            nodes: [{
+                id: 'general', text: 'General', group: true, expanded: true, nodes: [
+                    {id: 'item1', text: 'Item 1', img: 'icon-page'},
+                    {id: 'item2', text: 'Item 2', img: 'icon-page'},
+                    {id: 'item3', text: 'Item 3', img: 'icon-page'},
+                    {id: 'item4', text: 'Item 4', img: 'icon-page'}
+                ]
+            }
+            ],
+            onClick: function (event) {
+                var tabs = w2ui.layout_main_tabs;
+                if (tabs.get(event.target)) {
+                    //tabs.select(event.target);
+                    //w2ui.layout.html('main', 'Tab Selected');
+                } else {
+                    //tabs.add({id: event.target, caption: 'Tab ' + event.target, closable: true});
+                    //w2ui.layout.html('main', 'New tab added');
+                }
+            }
+        }
+    };
+
+    var tableContainer = null;
+    var worldContainer = null;
+    var worldWindow = null;
+
+    function showWorldContainer() {
+        $('#tableContainer').css('display', 'none');
+        $('#worldContainer').css('display', 'block');
+        if (worldWindow == null) {
+            // Create a World Window for the canvas.
+            worldWindow = new WorldWind.WorldWindow("worldCanvas");
+
+            // Add some image layers to the World Window's globe.
+            worldWindow.addLayer(new WorldWind.BMNGOneImageLayer());
+            worldWindow.addLayer(new WorldWind.BingAerialWithLabelsLayer());
+
+            // Add a compass, a coordinates display and some view controls to the World Window.
+            worldWindow.addLayer(new WorldWind.CompassLayer());
+            worldWindow.addLayer(new WorldWind.CoordinatesDisplayLayer(worldWindow));
+            worldWindow.addLayer(new WorldWind.ViewControlsLayer(worldWindow));
+        }
+        // Using the following (silly) calls we make the  WorldWind globe appear again.
+        var wwd = $('#worldCanvas');
+        //width = wwd.attr('width');
+        //height = wwd.attr('height');
+        //wwd.attr({'width': width, 'height': height});
+        wwd.attr({'width': 1000, 'height': 1000});
+    }
+
+    function showTableContainer() {
+        $('#worldContainer').css('display', 'none');
+        $('#tableContainer').css('display', 'block');
+    }
+
+    $(function () {
+        // initialization
+        $('#main').w2layout(config.layout);
+        w2ui.layout.content('left', $().w2sidebar(config.sidebar));
+
+        worldContainer = $('<div/>', {id: 'worldContainer', style: 'position: relative; display: none;'});
+        $('<canvas/>', {
+            id: 'worldCanvas',
+            width: 1000,
+            height: 1000,
+            style: 'width: 100%; height: auto;'
+        }).appendTo(worldContainer);
+
+        tableContainer = $('<p/>', {id: 'tableContainer', style: 'position: relative; display: block;'});
+        tableContainer.html("<p>This is going to be a <b>table</b>!</p>");
+
+        var mainContainer = $('<div/>', {id: 'mainContainer', style: 'position: relative'});
+        mainContainer.append(tableContainer);
+        mainContainer.append(worldContainer);
+        w2ui.layout.content('main', mainContainer[0]);
+        showTableContainer();
+
+    });
+</script>
+
+<div id="main" style='position: absolute; top: 0; bottom: 0; left: 0; right: 0;'></div>
+
+</body>
+</html>

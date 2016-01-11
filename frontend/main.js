@@ -1,17 +1,24 @@
 'use strict';
+
 const electron = require('electron');
+// see https://www.npmjs.com/package/request-promise
+const rp = require('request-promise');
+const child_process = require('child_process');
 const app = electron.app;  // Module to control application life.
 const Menu = electron.Menu;
 const Tray = electron.Tray;
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
+
+const serverAddress = 'http://127.0.0.1:8080/';
+const serverScript = "C:\\Python34\\Scripts\\dedopws.exe";
 
 // Report crashes to our server.
 electron.crashReporter.start();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-var mainWindow = null;
-var appIcon = null;
+var appWindow = null;
+var appTray = null;
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -22,45 +29,86 @@ app.on('window-all-closed', function () {
     }
 });
 
+app.on('will-quit', function (event) {
+    console.log("Event: will-quit: " + event);
+    rp(serverAddress + 'exit/0')
+        .then(function (response) {
+            console.log('server stopped: ' + response);
+        })
+        .catch(function (error) {
+            console.log('failed to stop server (error: ' + error + ')');
+        });
+});
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', function () {
 
-    appIcon = new Tray('images/dedop.png');
-    var contextMenu = Menu.buildFromTemplate([
-        {label: 'Item1', type: 'radio'},
-        {label: 'Item2', type: 'radio'},
-        {label: 'Item3', type: 'radio', checked: true},
-        {label: 'Item4', type: 'radio'}
-    ]);
-    appIcon.setToolTip('This is my application.');
-    appIcon.setContextMenu(contextMenu);
+    // see https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
+    var server = child_process.spawn(serverScript, [], [0, 1, 2]);
 
-
-    // Create the browser window.
-    mainWindow = new BrowserWindow({
-        title: 'DeDop',
-        icon: 'images/dedop.png',
-        width: 800, height: 600
+    server.stdout.on('data', function (data) {
+        console.log(`server: ${data}`);
     });
 
-    // and load the index.html of the app.
-    mainWindow.loadURL(`file://${__dirname}/index.html`);
-
-    // Open the DevTools.
-    mainWindow.webContents.openDevTools();
-
-    // Emitted when the window leaves full screen state.
-    mainWindow.on('leave-full-screen', function () {
-        appIcon.displayBalloon({title: 'Hey, hey!', content: 'You\'ve left the cool full-screen mode.'});
+    server.stderr.on('data', function (data) {
+        console.log(`server: ${data}`);
     });
 
-    // Emitted when the window is closed.
-    mainWindow.on('closed', function () {
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
-        mainWindow = null;
-        appIcon = null;
+    server.on('close', function (code) {
+        console.log(`server exited with code ${code}`);
     });
+
+    var openWindow = function () {
+        appTray = new Tray('images/dedop.png');
+        appTray.setToolTip('This is my application.');
+        appTray.setContextMenu(Menu.buildFromTemplate([
+            {label: 'Item1', type: 'radio'},
+            {label: 'Item2', type: 'radio'},
+            {label: 'Item3', type: 'radio', checked: true},
+            {label: 'Item4', type: 'radio'}
+        ]));
+
+        // Create the browser window.
+        appWindow = new BrowserWindow({
+            title: 'DeDop',
+            icon: 'images/dedop.png',
+            width: 800, height: 600
+        });
+
+        // and load the index.html of the app.
+        appWindow.loadURL(`file://${__dirname}/index.html`);
+
+        // Open the DevTools.
+        appWindow.webContents.openDevTools();
+
+        // Emitted when the window leaves full screen state.
+        appWindow.on('leave-full-screen', function () {
+            appTray.displayBalloon({title: 'Hey, hey!', content: 'You\'ve left the cool full-screen mode.'});
+        });
+
+        // Emitted when the window is closed.
+        appWindow.on('closed', function () {
+            // Dereference the window object, usually you would store windows
+            // in an array if your app supports multi windows, this is the time
+            // when you should delete the corresponding element.
+            appWindow = null;
+            appTray = null;
+        });
+    };
+
+    var openWindowAfterServerStarted = function () {
+        rp(serverAddress + "info")
+            .then(function (response) {
+                console.log('server started: ' + response);
+                openWindow();
+            })
+            .catch(function (error) {
+                console.log('waiting for the server to start... (error: ' + error + ')');
+                openWindowAfterServerStarted();
+            });
+    };
+
+    console.log('startUp...');
+    openWindowAfterServerStarted();
 });
