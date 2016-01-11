@@ -18,8 +18,7 @@
         * {
             margin: 0;
             padding: 0;
-            font-family: sans-serif;
-            font-size: 12px;
+            font-family: Calibri, sans-serif;
         }
 
         #container {
@@ -37,7 +36,7 @@
         #graphDiv {
             width: 50%;
             position: absolute;
-            top: 30px;
+            top: 34px;
             bottom: 0;
             left: 0;
             background: #AAAAAA;
@@ -67,7 +66,7 @@
 </head>
 <body>
 
-<div style="height: auto; padding: 5px; background: #545454">
+<div style="height: auto; padding: 5px; background: #545454; font-size: 12px;">
     <select id="productList" class="input-field" onchange="selectProduct()"></select>
     <input id="recIndex" size="5" class="input-field" onkeyup="if (event.keyCode == 13) setRecIndex()"/>
     <button id="incButton" class="button" style="width: 20px" onclick="incRecIndex()">+</button>
@@ -314,8 +313,17 @@
 
         // Create the Cesium viewer in '#earthDiv' component.
         viewer = new Cesium.Viewer('earthDiv', {
+            animation: false,
             baseLayerPicker: false,
+            fullscreenButton: false,
+            geocoder: true,
+            homeButton: false,
+            infoBox: true,
+            sceneModePicker: true,
+            selectionIndicator: true,
             timeline: false,
+            navigationHelpButton: true,
+            navigationInstructionsInitiallyVisible: false,
             // We must configure our imagery on our own, because Cesium uses addresses starting with "//..." which
             // electron interprets as requests to "file://..." instead of "http://...".
             // See https://discuss.atom.io/t/in-script-tag-is-interpreted-as-file/19232
