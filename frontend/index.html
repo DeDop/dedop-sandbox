@@ -4,7 +4,7 @@
     <!-- <script src="node_modules/requirejs/require.js"></script> -->
     <!-- <script src="node_modules/jquery/dist/jquery.js"></script> -->
 
-    <script src="lib/jquery-2.1.4.min.js" onload="$ = jQuery = module.exports;"></script>
+    <script src="lib/jquery-2.1.4.min.js" onload="if (module && module.exports) $ = jQuery = module.exports;"></script>
     <script src="lib/plotly-latest.min.js"></script>
     <!-- The installed plotly.js contains character code errors! <script src="node_modules/plotly.js/dist/plotly.js"></script>-->
 
@@ -18,6 +18,8 @@
         * {
             margin: 0;
             padding: 0;
+            font-family: sans-serif;
+            font-size: 12px;
         }
 
         #container {
@@ -30,7 +32,6 @@
             *display: inline;
             zoom: 1;
             vertical-align: top;
-            font-size: 12px;
         }
 
         #graphDiv {
@@ -39,6 +40,7 @@
             top: 30px;
             bottom: 0;
             left: 0;
+            background: #AAAAAA;
         }
 
         #earthDiv {
@@ -48,16 +50,29 @@
             bottom: 0;
             right: 0;
         }
+
+        .input-field {
+            border: 1px solid #AAAAAA;
+            background: #EEEEEE;
+            color: black;
+        }
+
+        button.button {
+            padding: 3px;
+            border: 1px solid #AAAAAA;
+            background: #333333;
+            color: white;
+        }
     </style>
 </head>
 <body>
 
-<div><label for="recIndex">Record index: </label>
-    <input id="recIndex" onkeyup="if (event.keyCode == 13) setRecIndex()"/>
-    <button id="incButton" onclick="incRecIndex()">+</button>
-    <button id="decButton" onclick="decRecIndex()">-</button>
-    <button id="redrawButton" onclick="redrawPlot()">Redraw</button>
-    <button id="flyButton" onclick="flyToRecord()">Fly To</button>
+<div style="height: auto; padding: 5px; background: #545454">
+    <select id="productList" class="input-field" onchange="selectProduct()"></select>
+    <input id="recIndex" size="5" class="input-field" onkeyup="if (event.keyCode == 13) setRecIndex()"/>
+    <button id="incButton" class="button" style="width: 20px" onclick="incRecIndex()">+</button>
+    <button id="decButton" class="button" style="width: 20px" onclick="decRecIndex()">-</button>
+    <button id="flyButton" class="button"  onclick="flyToRecord()">Locate</button>
 </div>
 
 <div id="container">
@@ -66,37 +81,32 @@
 </div>
 
 <script>
-/*
-    var $, jQuery;
-    var Cesium;
-    var Plotly;
 
-    //$ = jQuery = require("jquery");Cesium = require(["cesium"]);
-    require(["jquery", "plotly.js", "cesium"], function(jquery, plotly, cesium) {
-        $ = jQuery = jquery;
-        Plotly = plotly;
-        Cesium = cesium;
-    });
-*/
-    var productName = "S6_P4_SIM_RAW_L1A__20210929T064000_20210929T064019_T02.nc";
-    var recIndex = 0;
+    var selectedProductName = null;
+    var selectedRecIndex = 0;
+    var selectedEntity = null;
+
     var init = false;
     var graphDiv = null;
     var viewer = null;
     var recordDataSource = null;
-    var selectedEntity = null;
 
-    var data = [
+    // todo - get this variable from main.js, or better, let main.js export the function callServer(req, callback)
+    var serverAddress = "http://127.0.0.1:8080/";
+
+    var graphData = [
         {
             z: null,
             type: 'surface'
         }
     ];
-    var layout = {
-        title: productName,
-        autosize: false,
+    var graphLayout = {
+        title: selectedProductName,
+        autosize: true,
         width: 800,
         height: 800,
+        paper_bgcolor: '#AAAAAA',
+        plot_bgcolor: '#AAAAAA',
         margin: {
             l: 65,
             r: 50,
@@ -105,43 +115,77 @@
         }
     };
 
+    function callServer(request, callback) {
+        $.getJSON(serverAddress + request, callback);
+    }
+
+    function selectProduct(productName) {
+        // Adjust '#productList' component
+        var $productList = $('#productList')
+        if (productName) {
+            if (productName === selectedProductName) {
+                return;
+            }
+            selectedProductName = productName;
+            $productList.val(selectedProductName);
+        } else {
+            selectedProductName = $productList.val();
+        }
+        selectedRecIndex = 0;
+        selectedEntity = null;
+
+        // Ask server for geo-location information of all records which we will
+        // use to create a new Cesium point data source
+        callServer("geoloc/" + selectedProductName, function (result) {
+            for (var i = 0; i < result.length; i++) {
+                var p = result[i];
+                p[0] *= 10;
+                p[1] *= 10;
+            }
+            //addPointPrimitives(result);
+            addPointDataSource(result);
+        });
+
+        setRecIndex(selectedRecIndex);
+    }
+
     function setRecIndex(index) {
+        // Adjust '#recIndex' component
         var $recIndex = $('#recIndex');
         if (typeof index == 'number') {
-            recIndex = index;
+            selectedRecIndex = index;
             $recIndex.val(index + '');
         } else {
-            recIndex = parseInt($recIndex.val());
+            selectedRecIndex = parseInt($recIndex.val());
         }
         redrawPlot();
-        setSelectedEntity(recIndex);
+        setSelectedEntity(selectedRecIndex);
     }
 
     function incRecIndex() {
         var $recIndex = $('#recIndex');
-        recIndex = parseInt($recIndex.val());
-        recIndex++;
-        $recIndex.val(recIndex + "");
+        selectedRecIndex = parseInt($recIndex.val());
+        selectedRecIndex++;
+        $recIndex.val(selectedRecIndex + "");
         redrawPlot();
-        setSelectedEntity(recIndex);
+        setSelectedEntity(selectedRecIndex);
     }
 
     function decRecIndex() {
         var $recIndex = $('#recIndex');
-        recIndex = parseInt($recIndex.val());
-        recIndex--;
-        $recIndex.val(recIndex + "");
+        selectedRecIndex = parseInt($recIndex.val());
+        selectedRecIndex--;
+        $recIndex.val(selectedRecIndex + "");
         redrawPlot();
-        setSelectedEntity(recIndex);
+        setSelectedEntity(selectedRecIndex);
     }
 
     function redrawPlot() {
-        var url = "http://127.0.0.1:8080/mag/" + productName + "/" + recIndex;
-        $.getJSON(url, function (result) {
+        callServer("mag/" + selectedProductName + "/" + selectedRecIndex, function (result) {
             //console.log(result);
             if (!init) {
-                data[0].z = result;
-                Plotly.newPlot(graphDiv, data, layout);
+                graphData[0].z = result;
+                Plotly.newPlot(graphDiv, graphData, graphLayout);
                 init = true;
             } else {
                 graphDiv.data[0].z = result;
@@ -169,12 +213,13 @@
 
     function flyToRecord() {
         if (recordDataSource) {
-            var entity = recordDataSource.entities.values[recIndex];
+            var entity = recordDataSource.entities.values[selectedRecIndex];
             viewer.flyTo(entity);
             //viewer.zoomTo(entity);
         }
     }
 
+    // not used, but may be useful later
     function addPointPrimitives(points) {
         var scene = viewer.scene;
 
@@ -203,7 +248,7 @@
 
         var czml = [{
             "id": "document",
-            "name": "Positions of " + productName,
+            "name": "Positions of " + selectedProductName,
             "version": "1.0"
         }];
 
@@ -234,7 +279,7 @@
         viewer.dataSources.add(dataSourcePromise).then(function (dataSource) {
             recordDataSource = dataSource;
 
-            selectedEntity = recordDataSource.entities.values[recIndex];
+            selectedEntity = recordDataSource.entities.values[selectedRecIndex];
             viewer.selectedEntity = selectedEntity;
             viewer.flyTo(recordDataSource);
 
@@ -264,22 +309,33 @@
     }
 
     $(function () {
-        $('#recIndex').val(recIndex + "");
+        $('#recIndex').val(selectedRecIndex + "");
         graphDiv = document.getElementById('graphDiv');
-        redrawPlot();
 
-        // Create the viewer.
-        viewer = new Cesium.Viewer('earthDiv');
+        // Create the Cesium viewer in '#earthDiv' component.
+        viewer = new Cesium.Viewer('earthDiv', {
+            baseLayerPicker: false,
+            timeline: false,
+            // We must configure our imagery on our own, because Cesium uses addresses starting with "//..." which
+            // electron interprets as requests to "file://..." instead of "http://...".
+            // See https://discuss.atom.io/t/in-script-tag-is-interpreted-as-file/19232
+            imageryProvider: new Cesium.BingMapsImageryProvider({
+                url : 'http://dev.virtualearth.net'
+            })
+        });
 
-        var url = "http://127.0.0.1:8080/geoloc/" + productName;
-        $.getJSON(url, function (result) {
+        // Ask server for list of available products and fill '#productList' component
+        callServer("list", function (result) {
+            var productList = $('#productList');
             for (var i = 0; i < result.length; i++) {
-                var p = result[i];
-                p[0] *= 10;
-                p[1] *= 10;
+                var productName = result[i];
+                if (i == 0) {
+                    productList.append('<option value="' + productName + '" selected>' + productName + '</option>');
+                } else {
+                    productList.append('<option value="' + productName + '">' + productName + '</option>');
+                }
             }
-            //addPointPrimitives(result);
-            addPointDataSource(result);
+            selectProduct();
         });
     });
 </script>

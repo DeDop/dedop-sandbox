@@ -3,14 +3,13 @@
 const electron = require('electron');
 // see https://www.npmjs.com/package/request-promise
 const rp = require('request-promise');
+const fs = require('fs');
+const path = require('path');
 const child_process = require('child_process');
 const app = electron.app;  // Module to control application life.
 const Menu = electron.Menu;
 const Tray = electron.Tray;
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
-
-const serverAddress = 'http://127.0.0.1:8080/';
-const serverScript = "C:\\Python34\\Scripts\\dedopws.exe";
 
 // Report crashes to our server.
 electron.crashReporter.start();
@@ -19,6 +18,28 @@ electron.crashReporter.start();
 // be closed automatically when the JavaScript object is garbage collected.
 var appWindow = null;
 var appTray = null;
+
+
+var userDataDir = app.getPath('userData');
+console.log(`userDataDir: ${userDataDir}`);
+
+var appPath = app.getAppPath();
+console.log(`appPath: ${appPath}`);
+
+var appConfigPath = path.join(appPath, 'dedop-config.json');
+if (!fs.existsSync(appConfigPath)) {
+    console.error(`missing file: ${appConfigPath}`);
+    app.quit();
+}
+
+const appConfig = JSON.parse(fs.readFileSync(appConfigPath, 'utf8'));
+const serverAddress = appConfig.serverAddress;
+const serverScript = appConfig.serverScript;
+const serverArgs = appConfig.serverArgs;
+
+console.log(`serverAddress: ${serverAddress}`);
+console.log(`serverScript: ${serverScript}`);
+console.log(`serverArgs: ${serverArgs}`);
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -45,8 +66,7 @@ app.on('will-quit', function (event) {
 app.on('ready', function () {
 
     // see https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
-    var server = child_process.spawn(serverScript, [], [0, 1, 2]);
-
+    var server = child_process.spawn(serverScript, serverArgs, [0, 1, 2]);
     server.stdout.on('data', function (data) {
         console.log(`server: ${data}`);
     });
@@ -57,6 +77,10 @@ app.on('ready', function () {
 
     server.on('close', function (code) {
         console.log(`server exited with code ${code}`);
+    });
+
+    server.on('error', function (err) {
+        console.log('failed to start server: ' + err);
     });
 
     var openWindow = function () {

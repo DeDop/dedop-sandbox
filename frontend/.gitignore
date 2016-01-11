@@ -35,3 +35,5 @@ node_modules
 Cesium-*
 
 .vscode
+
+dedop-config.json
