@@ -6,8 +6,10 @@ const path = require('path');
 const child_process = require('child_process');
 // see https://www.npmjs.com/package/request-promise
 const rp = require('request-promise');
+const menuTempl = require('./menu-templ.js');
 
 const app = electron.app;  // Module to control application life.
+const dialog = electron.dialog;
 const Menu = electron.Menu;
 const MenuItem = electron.MenuItem;
 const Tray = electron.Tray;
@@ -21,23 +23,67 @@ electron.crashReporter.start();
 var appWindow = null;
 var appTray = null;
 
+app.openDirectory = function (window) {
+    var dirPaths = dialog.showOpenDialog(window, {
+        title: 'Open L1A Directory',
+        defaultPath: app.preferences.lastDir | null,
+        properties: ['openDirectory']
+    });
+    if (dirPaths && dirPaths.length > 0) {
+        var dirPath = dirPaths[0];
+        // todo - use dirPath here...
+        app.preferences.lastDir = dirPath;
+        console.log('Selected directory: ' + app.preferences.lastDir);
+    }
+}
 
-var userDataDir = app.getPath('userData');
-console.log(`userDataDir: ${userDataDir}`);
+app.openPreferencesWindow = (function () {
+    var preferencesWindow = null;
+    return function () {
+        if (!preferencesWindow) {
+            preferencesWindow = new BrowserWindow({
+                title: app.getName() + " User Preferences",
+                icon: 'images/dedop.png',
+                width: 400,
+                height: 300,
+                alwaysOnTop: true,
+                autoHideMenuBar: true
+            });
+            preferencesWindow.loadURL(`file://${__dirname}/preferences.html`);
+            preferencesWindow.on('close', function (event) {
+                // Use event.preventDefault() to prevent closing the window
+            });
+            preferencesWindow.on('closed', function () {
+                preferencesWindow = null;
+            });
+            console.log(`preferencesWindow.id: ${preferencesWindow.id}`);
+        }
 
-var appPath = app.getAppPath();
-console.log(`appPath: ${appPath}`);
+        preferencesWindow.center();
+        preferencesWindow.show();
+    }
+}());
 
-var appConfigPath = path.join(appPath, 'dedop-config.json');
+var appConfigPath = path.join(app.getAppPath(), 'dedop-config.json');
 if (!fs.existsSync(appConfigPath)) {
     console.error(`missing file: ${appConfigPath}`);
     app.quit();
 }
-
+console.log(`Loading configuration from ${appConfigPath}`);
 const appConfig = JSON.parse(fs.readFileSync(appConfigPath, 'utf8'));
 console.log(`serverAddress: ${appConfig.serverAddress}`);
 console.log(`serverScript: ${appConfig.serverScript}`);
 console.log(`serverArgs: ${appConfig.serverArgs}`);
+
+app.preferencesFile = path.join(app.getPath('userData'), 'preferences.json');
+app.preferences = {};
+if (fs.existsSync(app.preferencesFile)) {
+    console.log(`Loading preferences from ${app.preferencesFile}`);
+    app.preferences = JSON.parse(fs.readFileSync(app.preferencesFile, 'utf8'));
+}
+
+var appMenu = Menu.buildFromTemplate(menuTempl.create());
+Menu.setApplicationMenu(appMenu);
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -86,19 +132,32 @@ app.on('ready', function () {
 
     function openWindow() {
         appTray = new Tray('images/dedop.png');
-        appTray.setToolTip('This is my application.');
+        appTray.setToolTip(app.getName());
         appTray.setContextMenu(Menu.buildFromTemplate([
-            {label: 'Item1', type: 'radio'},
-            {label: 'Item2', type: 'radio'},
-            {label: 'Item3', type: 'radio', checked: true},
-            {label: 'Item4', type: 'radio'}
+            {
+                label: 'Preferences...',
+                click: function (item, window) {
+                    app.openPreferencesWindow(window);
+                }
+            }
         ]));
+
+        var windowX, windowY, windowWidth, windowHeight;
+        if (app.preferences.windowBounds) {
+            windowX = app.preferences.windowBounds.x;
+            windowY = app.preferences.windowBounds.y;
+            windowWidth = app.preferences.windowBounds.width;
+            windowHeight = app.preferences.windowBounds.height;
+        }
 
         // Create the browser window.
         appWindow = new BrowserWindow({
-            title: 'DeDop',
+            title: app.getName() + ' ' + app.getVersion(),
             icon: 'images/dedop.png',
-            width: 800, height: 600
+            x: windowX | undefined,
+            y: windowY | undefined,
+            width: windowWidth | 1000,
+            height: windowHeight | 800
         });
 
         // and load the index.html of the app.
@@ -114,6 +173,17 @@ app.on('ready', function () {
             appTray.displayBalloon({title: 'Hey, hey!', content: 'You\'ve left the cool full-screen mode.'});
         });
 
+        appWindow.on('close', function (event) {
+            // Use event.preventDefault() to prevent actually closing the window
+            if (!appWindow.isFullScreen()) {
+                app.preferences.windowBounds = appWindow.getBounds();
+            }
+            console.log(`Storing preferences in ${app.preferencesFile}`);
+            var appPrefsText = JSON.stringify(app.preferences, null, 4);
+            console.log(`Preferences: ${appPrefsText}`);
+            fs.writeFileSync(app.preferencesFile, appPrefsText);
+        });
+
         // Emitted when the window is closed.
         appWindow.on('closed', function () {
             // Dereference the window object, usually you would store windows
@@ -124,7 +194,7 @@ app.on('ready', function () {
         });
     }
 
-     function openWindowAfterServerStarted() {
+    function openWindowAfterServerStarted() {
         rp(appConfig.serverAddress + "info")
             .then(function (response) {
                 console.log('server started: ' + response);
