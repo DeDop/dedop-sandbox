@@ -35,13 +35,9 @@ if (!fs.existsSync(appConfigPath)) {
 }
 
 const appConfig = JSON.parse(fs.readFileSync(appConfigPath, 'utf8'));
-const serverAddress = appConfig.serverAddress;
-const serverScript = appConfig.serverScript;
-const serverArgs = appConfig.serverArgs;
-
-console.log(`serverAddress: ${serverAddress}`);
-console.log(`serverScript: ${serverScript}`);
-console.log(`serverArgs: ${serverArgs}`);
+console.log(`serverAddress: ${appConfig.serverAddress}`);
+console.log(`serverScript: ${appConfig.serverScript}`);
+console.log(`serverArgs: ${appConfig.serverArgs}`);
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -54,7 +50,7 @@ app.on('window-all-closed', function () {
 
 app.on('will-quit', function (event) {
     console.log("Event: will-quit: " + event);
-    rp(serverAddress + 'exit/0')
+    rp(appConfig.serverAddress + 'exit/0')
         .then(function (response) {
             console.log('server stopped: ' + response);
         })
@@ -69,7 +65,7 @@ app.on('ready', function () {
 
     function startServer() {
         // see https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
-        var server = child_process.spawn(serverScript, serverArgs, [0, 1, 2]);
+        var server = child_process.spawn(appConfig.serverScript, appConfig.serverArgs, [0, 1, 2]);
 
         server.stdout.on('data', function (data) {
             console.log(`server: ${data}`);
@@ -108,8 +104,10 @@ app.on('ready', function () {
         // and load the index.html of the app.
         appWindow.loadURL(`file://${__dirname}/index.html`);
 
-        // Open the DevTools.
-        appWindow.webContents.openDevTools();
+        if (appConfig.openDevTools) {
+            // Open the DevTools.
+            appWindow.webContents.openDevTools();
+        }
 
         // Emitted when the window leaves full screen state.
         appWindow.on('leave-full-screen', function () {
@@ -127,7 +125,7 @@ app.on('ready', function () {
     }
 
      function openWindowAfterServerStarted() {
-        rp(serverAddress + "info")
+        rp(appConfig.serverAddress + "info")
             .then(function (response) {
                 console.log('server started: ' + response);
                 openWindow();

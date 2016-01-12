@@ -53,7 +53,8 @@ except the one for ``"serverAddress"``:
     {
       "serverAddress": "http://127.0.0.1:8080/",
       "serverScript": "C:\\Python34-amd64\\Scripts\\dedopws.exe",
-      "serverArgs": ["D:\\EOData\\DeDop\\L1A"]
+      "serverArgs": ["D:\\EOData\\DeDop\\L1A"],
+      "openDevTools": false
     }
 ```
 3. Run
