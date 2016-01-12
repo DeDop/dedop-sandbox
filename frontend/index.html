@@ -245,6 +245,7 @@
         var color = [100, 0, 200, 200];
         var outlineColor = [200, 0, 200, 200];
 
+        // See https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide
         var czml = [{
             "id": "document",
             "name": "Positions of " + selectedProductName,
@@ -257,6 +258,7 @@
             czml.push({
                 "id": "rec" + i,
                 "name": "Record " + (i + 1),
+                "description": "This is measurement #" + (i + 1) + " recorded at (" + point[1] + "," + point[0] + ").",
                 "position": {
                     "cartographicDegrees": [point[1], point[0], 1000.0]
                 },
