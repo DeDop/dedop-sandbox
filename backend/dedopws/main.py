@@ -116,7 +116,6 @@ class MagnitudeAt:
             data[i] = numpy.sqrt(i_comp * i_comp + q_comp * q_comp)
         resp.data = json.dumps(data, cls=SimpleNumpyAwareJSONEncoder)
         resp.content_type = 'application/json'
-        resp.set_header('Access-Control-Allow-Origin', '*')
         resp.status = falcon.HTTP_200
 
 
