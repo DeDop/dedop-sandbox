@@ -1,11 +1,14 @@
 {
-  "name": "dedopgui",
+  "name": "dedopui",
+  "productName": "DeDop",
   "version": "0.0.1",
   "author": "Norman Fomferra",
   "main": "main.js",
-  "description": "GUI for the DPP",
+  "description": "DeDop user interface prototype",
   "license": "GPL-3.0",
   "private": true,
+  "repository": "https://github.com/DeDop/dedop-sandbox",
+  "electronVersion": "0.36.0",
   "scripts": {
     "start": "electron ."
   },
