@@ -106,9 +106,9 @@
 
     <script>
         $(function() {
-            $splitter = $('#splitter');
-            $contentLeft = $('#content_left')
-            $contentRight = $('#content_right')
+            var $splitter = $('#splitter');
+            var $contentLeft = $('#content_left')
+            var $contentRight = $('#content_right')
             $splitter.draggable({
                 axis: 'x',
                 containment: 'parent',
@@ -161,7 +161,6 @@
             </div>
             <div id="splitter"></div>
             <div id="content_right">
-                <h2>This lauout is made intirely with CSS - and better yet, it works alle the way down to IE 5.0<br><br>Havent had time to write an explantaion yet but the source code should be pretty strait forward :-)<br><br>- Rasmus L. Knabe</h2>
                 <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore
                     magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
                     commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
