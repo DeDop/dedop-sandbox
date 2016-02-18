@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>W2UI Demo: layout-7</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="http://w2ui.com/src/w2ui-1.4.2.min.css"/>
+    <link rel="stylesheet" href="https://raw.githubusercontent.com/vitmalina/w2ui/master/dist/w2ui-dark.css"/>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"
+            onload="$ = jQuery = module.exports;"></script>
+    <script src="http://w2ui.com/src/w2ui-1.4.2.min.js"></script>
+
+    <style>
+        /* see http://stackoverflow.com/questions/826782/css-rule-to-disable-text-selection-highlighting */
+        .no-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .close-button, .close-button:hover, .close-button:active {
+            float: right;
+            cursor: default;
+            font-size: 75%;
+            opacity: 0;
+            color: darkblue;
+        }
+
+        .close-button:hover {
+            opacity: 0.5;
+        }
+
+        .close-button:active {
+            opacity: 1.0;
+        }
+
+        .title {
+            font-size: 90%;
+            font-family: Calibri, Arial, sans-serif;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="toolbar" style="position: absolute; top: 4px; left: 4px; right: 4px; border: 1px solid silver; background: lightslategrey">
+</div>
+<div id="layout" style="position: absolute; top: 40px; bottom: 60px; left: 4px; right: 4px;">
+</div>
+<div style="position: absolute; bottom: 30px; width: 100%;">
+    <span style="display: inline-block; width: 60px;"> Main: </span>
+    <button class="btn" onclick="w2ui['layout'].toggle('top')">Top</button>
+    <button class="btn" onclick="w2ui['layout'].toggle('left')">Left</button>
+    <button class="btn" onclick="w2ui['layout'].toggle('right')">Right</button>
+    <button class="btn" onclick="w2ui['layout'].toggle('preview')">Preview</button>
+    <button class="btn" onclick="w2ui['layout'].toggle('bottom')">Bottom</button>
+</div>
+
+<div style="position: absolute; bottom: 0; width: 100%;">
+    <span style="display: inline-block; width: 60px;"> Nested: </span>
+    <button class="btn" onclick="w2ui['layout2'].toggle('top')">Top</button>
+    <button class="btn" onclick="w2ui['layout2'].toggle('left')">Left</button>
+    <button class="btn" onclick="w2ui['layout2'].toggle('right')">Right</button>
+    <button class="btn" onclick="w2ui['layout2'].toggle('preview')">Preview</button>
+    <button class="btn" onclick="w2ui['layout2'].toggle('bottom')">Bottom</button>
+</div>
+
+<script type="text/javascript">
+
+    function hideLayoutPanel(layoutId, panelType) {
+        w2ui[layoutId].hide(panelType);
+    }
+
+    $(function () {
+
+        $('#toolbar').w2toolbar({
+            name: 'toolbar',
+            items: [
+                {type: 'spacer'},
+                {
+                    type: 'menu', id: 'panelList', caption: 'Panels', icon: 'fa fa-table', count: 17, items: [
+                    {text: 'Item 1', icon: 'fa fa-camera', count: 5},
+                    {text: 'Item 2', icon: 'fa fa-star', disabled: true},
+                    {text: 'Item 3', icon: 'fa fa-glass', count: 12},
+                    {text: 'Item 4', icon: 'fa fa-wrench'},
+                    {text: 'Item 5', icon: 'fa fa-user'},
+                    {text: 'Item 5', icon: 'fa signal'},
+                ]
+                }
+
+            ],
+            onClick: function (event) {
+                console.log('Target: ', event.target, event);
+            }
+        });
+
+
+        // See http://w2ui.com/web/docs/w2layout.panels
+        var PanelContent = (function () {
+
+            var PanelContent = function () {
+                this.box = null;
+            };
+
+            PanelContent.prototype.render = function () {
+                console.log("Box: ", this.box);
+            };
+
+            return PanelContent;
+        })();
+
+        // See http://w2ui.com/web/docs/w2layout.panels
+        var PanelFactory = (function () {
+
+            function _createCloseButtonHtml(layoutId, panelType) {
+                var onClickValue = "hideLayoutPanel('" + layoutId + "', '" + panelType + "')";
+                return '<span class="close-button no-select" onclick="' + onClickValue + '">&#10060;</span>';
+            }
+
+            function _createPanel(layoutId, panelType, panelOptions, closable, resizeable, style) {
+                var panel = $.extend(true, {}, panelOptions);
+                panel.type = panelType;
+                panel.resizable = panel.resizable != null ? panel.resizable : resizeable;
+                panel.style = panel.style != null ? panel.style : style;
+                panel.title = panel.title != null ? panel.title : '';
+                if (panel.title != '') {
+                    panel.title = '<span class="title">' + panel.title + '</span>';
+                }
+                if (closable) {
+                    panel.title += _createCloseButtonHtml(layoutId, panelType);
+                }
+                return panel;
+            }
+
+            var PanelFactory = function (layoutId, style) {
+                this.layoutId = layoutId;
+                this.style = style;
+            };
+
+            PanelFactory.prototype.createMain = function (panelOptions, closable) {
+                return _createPanel(this.layoutId, 'main', panelOptions, closable, undefined, this.style);
+            };
+
+            PanelFactory.prototype.createLeft = function (panelOptions, closable) {
+                return _createPanel(this.layoutId, 'left', panelOptions, closable, true, this.style);
+            };
+
+            PanelFactory.prototype.createRight = function (panelOptions, closable) {
+                return _createPanel(this.layoutId, 'right', panelOptions, closable, true, this.style);
+            };
+
+            PanelFactory.prototype.createTop = function (panelOptions, closable) {
+                return _createPanel(this.layoutId, 'top', panelOptions, closable, true, this.style);
+            };
+
+            PanelFactory.prototype.createBottom = function (panelOptions, closable) {
+                return _createPanel(this.layoutId, 'bottom', panelOptions, closable, true, this.style);
+            };
+
+            PanelFactory.prototype.createPreview = function (panelOptions, closable) {
+                return _createPanel(this.layoutId, 'preview', panelOptions, closable, true, this.style);
+            };
+
+            return PanelFactory;
+        })();
+
+        var pf1 = new PanelFactory('layout', 'border: 1px solid silver; padding: 4px');
+        var pf2 = new PanelFactory('nested', 'border: 1px solid silver; padding: 4px; background: #ffffdd');
+
+        $('#layout').w2layout({
+            name: 'layout',
+            padding: 4,
+            panels: [
+                pf1.createTop({title: 'Top', size: 50, content: 'Top', hidden: true}, true),
+                pf1.createLeft({title: 'Left', size: 200, content: 'Left'}, true),
+                pf1.createMain({title: 'Main', overflow: 'hidden', content: 'Main'}, false),
+                pf1.createPreview({title: 'Preview', size: '50%', content: 'Preview', hidden: true}, true),
+                pf1.createRight({title: 'Right', size: 200, content: 'Right'}, true),
+                pf1.createBottom({title: 'Bottom', size: 50, content: 'Bottom', hidden: true}, true)
+            ]
+        });
+
+        $().w2layout({
+            name: 'nested',
+            padding: 4,
+            panels: [
+                pf2.createTop({title: 'Top2', size: 50, content: 'Top2', hidden: true}, true),
+                pf2.createLeft({title: 'Left2', size: 80, content: 'Left2'}, true),
+                pf2.createMain({title: 'Main2', content: 'Main2'}, false),
+                pf2.createPreview({title: 'Preview2', size: '50%', content: 'Preview2', hidden: true}, true),
+                pf2.createRight({title: 'Right2', size: 80, content: 'Right2'}, true),
+                pf2.createBottom({title: 'Bottom2', size: 40, content: 'Bottom2', hidden: true}, true)
+            ]
+        });
+
+        w2ui['layout'].content('main', w2ui['nested']);
+    });
+</script>
+
+
+</body>
+</html>

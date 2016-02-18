@@ -1,9 +1,10 @@
 {
-  "name": "DeDop",
+  "name": "dedopui2",
+  "productName": "DeDop UI2",
   "version": "0.0.1",
   "description": "A minimal Electron application",
   "author": "Norman Fomferra",
-  "license": "GPL 3",
+  "license": "GPL-3.0",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
