@@ -47,7 +47,7 @@ Build and run
 
 0. Kill the dedopws if it is still running. The frontend will start a new dedopws process on its own (see config below).
 1. Install latest Node.js to get node's package manager ``npm``.
-2. Download Cesium-1.16 and unzip into ``frontend/Cesium-1.16``
+2. Download Cesium-1.17 and unzip into ``frontend/Cesium-1.17``
 2. Create local file ``frontend/dedop-config.json`` but don't add this file to git! Adjust configuration parameters 
 except the one for ``"serverAddress"``:
 ```
