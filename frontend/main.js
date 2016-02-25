@@ -11,9 +11,9 @@ const menuTempl = require('./menu-templ.js');
 const app = electron.app;  // Module to control application life.
 const dialog = electron.dialog;
 const Menu = electron.Menu;
-const MenuItem = electron.MenuItem;
 const Tray = electron.Tray;
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
+
 
 // Report crashes to our server.
 electron.crashReporter.start();
@@ -22,6 +22,7 @@ electron.crashReporter.start();
 // be closed automatically when the JavaScript object is garbage collected.
 var appWindow = null;
 var appTray = null;
+var appServerStarted = false;
 
 app.openDirectory = function (window) {
     var dirPaths = dialog.showOpenDialog(window, {
@@ -35,7 +36,7 @@ app.openDirectory = function (window) {
         app.preferences.lastDir = dirPath;
         console.log('Selected directory: ' + app.preferences.lastDir);
     }
-}
+};
 
 app.openPreferencesWindow = (function () {
     var preferencesWindow = null;
@@ -109,7 +110,7 @@ app.on('will-quit', function (event) {
 // initialization and is ready to create browser windows.
 app.on('ready', function () {
 
-    function startServer() {
+    function startAppServer() {
         // see https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
         var server = child_process.spawn(appConfig.serverScript, appConfig.serverArgs, [0, 1, 2]);
 
@@ -194,19 +195,24 @@ app.on('ready', function () {
         });
     }
 
-    function openWindowAfterServerStarted() {
+    function openWindowAfterAppServerStarted() {
         rp(appConfig.serverAddress + "info")
             .then(function (response) {
-                console.log('server started: ' + response);
+                console.log('server running: ' + response);
                 openWindow();
             })
             .catch(function (error) {
-                console.log('waiting for the server to start... (error: ' + error + ')');
-                openWindowAfterServerStarted();
+                if (!appServerStarted) {
+                    console.log('starting server...');
+                    startAppServer();
+                    appServerStarted = true;
+                } else {
+                    console.log('waiting for server... (got error: ' + error + ')');
+                }
+                openWindowAfterAppServerStarted();
             });
     }
 
     console.log('startUp...');
-    startServer();
-    openWindowAfterServerStarted();
+    openWindowAfterAppServerStarted();
 });
