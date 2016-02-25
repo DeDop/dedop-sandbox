@@ -94,7 +94,9 @@ class GeoLoc:
         lat = dataset['latitude_ku'][:]
         lon = dataset['longitude_ku'][:]
         scale_factor = 1.0e-7
-        lon[lon > 180.0] -= 360.0
+        lon180 = int(180 / scale_factor)
+        lon360 = int(360 / scale_factor)
+        lon[lon > lon180] -= lon360
         geo_data = numpy.column_stack((lat * scale_factor, lon * scale_factor))
         resp.data = json.dumps(geo_data, cls=SimpleNumpyAwareJSONEncoder)
         resp.content_type = 'application/json'
