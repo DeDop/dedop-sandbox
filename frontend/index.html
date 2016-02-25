@@ -8,12 +8,12 @@
     <script src="lib/plotly-latest.min.js"></script>
     <!-- The installed plotly.js contains character code errors! <script src="node_modules/plotly.js/dist/plotly.js"></script>-->
 
-    <script src="Cesium-1.16/Build/Cesium/Cesium.js"></script>
+    <script src="Cesium-1.17/Build/Cesium/Cesium.js"></script>
     <!-- The installed Cesium doesn't come with default globe?! <script src="node_modules/cesium/Build/Cesium/Cesium.js"></script> -->
     <style>
 
         /*@import url(node_modules/cesium/Build/Cesium/Widgets/widgets.css);*/
-        @import url(Cesium-1.16/Build/Cesium/Widgets/widgets.css);
+        @import url(Cesium-1.17/Build/Cesium/Widgets/widgets.css);
 
         * {
             margin: 0;
@@ -295,6 +295,7 @@
             //
             // This option works, although it uses private API ('_selectedEntity').
             // see https://github.com/AnalyticalGraphicsInc/cesium/issues/2734
+            // see https://groups.google.com/forum/#!msg/cesium-dev/MYEVSSZtYrg/eIROiLDqAAAJ
             Cesium.knockout.getObservable(viewer, '_selectedEntity').subscribe(function(entity) {
                 if (entity !== undefined) {
                     console.log(entity.id);
