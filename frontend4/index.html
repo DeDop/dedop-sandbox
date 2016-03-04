@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>DeDop UI</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="app/app.css">
+    <script data-main="main" src="lib/require.js"></script>
+    <svg>
+        <symbol id="left-selection" viewBox="0 0 512 512">
+            <path d="M 512 160 l -160 100 160 100 z"></path>
+        </symbol>
+    </svg>
+</head>
+
+<body>
+
+    <div id="left-bar" class="left-bar">
+        <div id="datamgr" class="left-bar-item"><i class="fa fa-photo"></i>
+            <div class="left-selection">
+                <svg width="1.2em" height="1.2em">
+                    <use fill="#1E1E1E" xlink:href="#left-selection"></use>
+                </svg>
+            </div>
+        </div>
+        <div id="confmgr" class="left-bar-item"><i class="fa fa-area-chart"></i></div>
+        <div id="procmgr" class="left-bar-item"><i class="fa fa-map"></i></div>
+        <div id="analysis" class="left-bar-item"><i class="fa fa-line-chart"></i></div>
+        <div id="code" class="left-bar-item"><i class="fa fa-code"></i></div>
+    </div>
+
+    <div id="status-bar" class="status-bar">
+        <span class="status-bar-item-l"><i class="fa fa-eye"></i></span>
+        <span class="status-bar-item-l">A</span>
+        <span class="status-bar-item-l">B</span>
+        <span class="status-bar-item-l">C</span>
+        <span class="status-bar-item-r"><i class="fa fa-tasks"></i></span>
+        <span class="status-bar-item-r">Z</span>
+        <span class="status-bar-item-r">Y</span>
+        <span class="status-bar-item-r">X</span>
+    </div>
+
+    <div id="editor-panel" class="editor-panel">
+        <div id="resize-label" class="resize-label">
+        </div>
+    </div>
+    
+</body>
+
+</html>
