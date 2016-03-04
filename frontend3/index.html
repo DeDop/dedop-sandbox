@@ -3,12 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>W2UI Demo: layout-7</title>
+
+<!--
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="http://w2ui.com/src/w2ui-1.4.2.min.css"/>
     <link rel="stylesheet" href="https://raw.githubusercontent.com/vitmalina/w2ui/master/dist/w2ui-dark.css"/>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"
             onload="$ = jQuery = module.exports;"></script>
     <script src="http://w2ui.com/src/w2ui-1.4.2.min.js"></script>
+-->
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+
+    <!--<link rel="stylesheet" href="w2ui.css"/>-->
+    <link rel="stylesheet" href="w2ui-dark.css"/>-->
+    <script src="w2ui.js"></script>
 
     <style>
         /* see http://stackoverflow.com/questions/826782/css-rule-to-disable-text-selection-highlighting */
@@ -38,7 +48,7 @@
 
         .title {
             font-size: 90%;
-            font-family: Calibri, Arial, sans-serif;
+            font-family: Segoe UI, Calibri, Arial, sans-serif;
             font-weight: bold;
         }
 
@@ -46,9 +56,9 @@
 </head>
 <body>
 
-<div id="toolbar" style="position: absolute; top: 4px; left: 4px; right: 4px; border: 1px solid silver; background: lightslategrey">
+<div id="toolbar" style="position: absolute; top: 4px; left: 4px; right: 4px; border: 1px solid silver">
 </div>
-<div id="layout" style="position: absolute; top: 40px; bottom: 60px; left: 4px; right: 4px;">
+<div id="layout" style="position: absolute; top: 40px; bottom: 60px; left: 4px; right: 4px; background: #000000">
 </div>
 <div style="position: absolute; bottom: 30px; width: 100%;">
     <span style="display: inline-block; width: 60px;"> Main: </span>
@@ -167,8 +177,8 @@
             return PanelFactory;
         })();
 
-        var pf1 = new PanelFactory('layout', 'border: 1px solid silver; padding: 4px');
-        var pf2 = new PanelFactory('nested', 'border: 1px solid silver; padding: 4px; background: #ffffdd');
+        var pf1 = new PanelFactory('layout', 'padding: 4px');
+        var pf2 = new PanelFactory('nested', 'padding: 4px');
 
         $('#layout').w2layout({
             name: 'layout',
@@ -185,6 +195,9 @@
 
         $().w2layout({
             name: 'nested',
+            style: {
+                background: '#AAAAAA'
+            },
             padding: 4,
             panels: [
                 pf2.createTop({title: 'Top2', size: 50, content: 'Top2', hidden: true}, true),
