@@ -44,3 +44,44 @@
 
 *	Visual Studio Code
 *	Atom
+
+
+
+## Web servers
+
+Jupyter uses Tornado web server
+
+* http://www.tornadoweb.org/en/stable/index.html
+
+Running WSGI apps on Tornado servers (e.g. Falcon):
+
+* http://www.tornadoweb.org/en/stable/wsgi.html
+
+Benchmarks
+
+* http://nichol.as/benchmark-of-python-web-servers
+* http://klen.github.io/py-frameworks-bench/
+
+
+# IPython / Jupyter
+
+IPython configuration:
+
+* http://ipython.readthedocs.org/en/stable/config/intro.html
+
+IPython kernel options:
+
+* http://ipython.readthedocs.org/en/stable/config/options/kernel.html
+
+
+Useful commands:
+
+* ipython notebook --config .\jupyter_notebook_config.py
+* ipython --ipython-dir=.ipython --init notebook
+
+
+Start GUI from IPython:
+
+    import dedopws.main
+    dedopws.main.launch_gui('../frontend', 'D:/EOData/DeDop/L1A')
+

@@ -1,11 +1,13 @@
-import sys
-import os
+import base64
 import json
-import numpy
+import os
+import sys
+
 import cherrypy
 import falcon
 import h5py
-import base64
+import numpy
+
 from dedopws.processor import Job
 
 __version__ = '0.0.1'
@@ -260,10 +262,10 @@ class Info:
         resp.status = falcon.HTTP_200
 
 
-def main(args=sys.argv):
-
+def serve_forever(data_dir, blocking=True):
     global DATA_ROOT
-    DATA_ROOT = args[1]
+    DATA_ROOT = data_dir
+    print('DATA_ROOT = %s' % DATA_ROOT)
 
     # Create instance of our DeDop RESTful API called 'api', which is a WSGI application instance.
     api = falcon.API(after=[crossdomain])
@@ -284,7 +286,24 @@ def main(args=sys.argv):
     # See docs.cherrypy.org/en/latest/advanced.html?host-a-foreign-wsgi-application-in-cherrypy#host-a-foreign-wsgi-application-in-cherrypy
     cherrypy.tree.graft(api, '/')
     cherrypy.engine.start()
-    cherrypy.engine.block()
+    if blocking:
+        cherrypy.engine.block()
+
+
+def launch_gui(app_dir='.', data_dir=None):
+    import subprocess
+    import os
+    serve_forever(data_dir, blocking=False)
+    electron_executable = os.path.join(os.path.normpath(app_dir),
+                                       'node_modules', 'electron-prebuilt', 'dist', 'electron.exe')
+    print('electron_executable = %s' % electron_executable)
+    print('app_dir = %s' % app_dir)
+    with open('electron.log', 'w') as f:
+        subprocess.Popen([electron_executable, app_dir, '--expect-server'], stdout=f, stderr=f)
+
+
+def main(args=sys.argv):
+    serve_forever(args[1])
 
 
 if __name__ == '__main__':

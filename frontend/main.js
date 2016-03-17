@@ -16,7 +16,7 @@ const BrowserWindow = electron.BrowserWindow;  // Module to create native browse
 
 
 // Report crashes to our server.
-electron.crashReporter.start();
+electron.crashReporter.start({companyName: 'Brockmann Consult GmbH'});
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -28,7 +28,7 @@ app.openDirectory = function (window) {
     var dirPaths = dialog.showOpenDialog(window, {
         title: 'Open L1A Directory',
         defaultPath: app.preferences.lastDir | null,
-        properties: ['openDirectory']
+        properties: ['openFile', 'openDirectory']
     });
     if (dirPaths && dirPaths.length > 0) {
         var dirPath = dirPaths[0];
@@ -44,7 +44,7 @@ app.openPreferencesWindow = (function () {
         if (!preferencesWindow) {
             preferencesWindow = new BrowserWindow({
                 title: app.getName() + " User Preferences",
-                icon: 'images/dedop.png',
+                icon: getAppIconPath(),
                 width: 400,
                 height: 300,
                 alwaysOnTop: true,
@@ -106,9 +106,51 @@ app.on('will-quit', function (event) {
         });
 });
 
+function getAppIconPath() {
+    return `${__dirname}/images/dedop.png`;
+}
+
+var splashScreen = null;
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', function () {
+    splashScreen = new BrowserWindow({
+        icon: getAppIconPath(),
+        type: 'splash',
+        center: true,
+        width: 530,
+        height: 530,
+        useContentSize: false,
+        transparent: true,
+        titleBarStyle: 'hidden',
+        autoHideMenuBar: true,
+        frame: false,
+        alwaysOnTop: true,
+    });
+    splashScreen.loadURL(`file://${__dirname}/splash.html`);
+    //splashScreen.webContents.openDevTools();
+
+    var config = {};
+    config.expectServer = false;
+    config.arguments = [];
+    for (var i in process.argv) {
+        var arg = process.argv[i];
+        console.log("process.argv[" + i + "] = " + arg);
+        if (i >= 2) {
+            if (arg.startsWith('-')) {
+                if (arg === '--expect-server') {
+                    config.expectServer = true;
+                } else {
+                    console.error('Unexpected command-line option: ' + arg);
+                }
+            } else {
+                config.arguments.push(arg);
+            }
+        }
+    }
+
+    appServerStarted = config.expectServer;
 
     function startAppServer() {
         // see https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
@@ -132,7 +174,7 @@ app.on('ready', function () {
     }
 
     function openWindow() {
-        appTray = new Tray('images/dedop.png');
+        appTray = new Tray(getAppIconPath());
         appTray.setToolTip(app.getName());
         appTray.setContextMenu(Menu.buildFromTemplate([
             {
@@ -154,11 +196,12 @@ app.on('ready', function () {
         // Create the browser window.
         appWindow = new BrowserWindow({
             title: app.getName() + ' ' + app.getVersion(),
-            icon: 'images/dedop.png',
+            icon: getAppIconPath(),
             x: windowX | undefined,
             y: windowY | undefined,
             width: windowWidth | 1000,
-            height: windowHeight | 800
+            height: windowHeight | 800,
+            show: false
         });
 
         // and load the index.html of the app.
@@ -193,13 +236,24 @@ app.on('ready', function () {
             appWindow = null;
             appTray = null;
         });
+
+        appWindow.on('show', function () {
+            console.log('Jetzt ist show time!');
+            if (splashScreen != null) {
+                // Close splash only after main window is shown.
+                splashScreen.destroy();
+                splashScreen = null;
+            }
+        });
+
+        appWindow.show();
     }
 
     function openWindowAfterAppServerStarted() {
-        rp(appConfig.serverAddress + "info")
+        rp(appConfig.serverAddress + 'info')
             .then(function (response) {
-                console.log('server running: ' + response);
                 openWindow();
+                console.log('server running: ' + response);
             })
             .catch(function (error) {
                 if (!appServerStarted) {
@@ -208,11 +262,13 @@ app.on('ready', function () {
                     appServerStarted = true;
                 } else {
                     console.log('waiting for server... (got error: ' + error + ')');
+                    console.log(error.stack.split('\n'))
                 }
-                openWindowAfterAppServerStarted();
+                setTimeout(openWindowAfterAppServerStarted, 500);
             });
     }
 
     console.log('startUp...');
     openWindowAfterAppServerStarted();
+    //setTimeout(openWindowAfterAppServerStarted, 1500);
 });

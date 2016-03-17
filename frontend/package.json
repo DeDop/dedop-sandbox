@@ -8,7 +8,7 @@
   "license": "GPL-3.0",
   "private": true,
   "repository": "https://github.com/DeDop/dedop-sandbox",
-  "electronVersion": "0.36.0",
+  "electronVersion": "0.37.2",
   "scripts": {
     "start": "electron ."
   },
@@ -16,6 +16,6 @@
     "request-promise": "~1.0.2"
   },
   "devDependencies": {
-    "electron-prebuilt": "^0.36.0"
+    "electron-prebuilt": "^0.37.2"
   }
 }
