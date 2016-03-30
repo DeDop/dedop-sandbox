@@ -60,13 +60,26 @@ def json_numpy_object_hook(dct):
 
 
 def _get_dataset(file_name):
-    file_path = os.path.join(DATA_ROOT, file_name)
+    file_type = _get_production_type(file_name)
+    file_path = os.path.join(DATA_ROOT, file_type, file_name)
     if file_name in DATASETS:
         dataset = DATASETS[file_name]
     else:
         dataset = h5py.File(file_path, 'r')
         DATASETS[file_name] = dataset
     return dataset
+
+
+def _get_production_type(file_name):
+    if "L1A" in file_name:
+        production_type = "L1A"
+    elif "L1B" in file_name:
+        production_type = "L1B"
+    elif "L1BS" in file_name:
+        production_type = "L1BS"
+    else:
+        production_type = ""
+    return production_type
 
 
 def _to_unicode(data):
@@ -120,6 +133,15 @@ class MagnitudeAt:
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_200
 
+class AttenuatorCalibratedAt:
+    def on_get(self, req, resp, file_name):
+        dataset = _get_dataset(file_name)
+        attenuator_calibrated_ku = dataset['attenuator_calibrated_ku'][:]
+        data = attenuator_calibrated_ku
+        resp.data = json.dumps(data, cls=SimpleNumpyAwareJSONEncoder)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_200
+
 
 class ArrayData:
     def on_get(self, req, resp, file_name, variable_name):
@@ -143,7 +165,7 @@ class ArrayDataAt:
 
 class ListFiles:
     def on_get(self, req, resp):
-        resp.body = json.dumps(os.listdir(DATA_ROOT))
+        resp.body = json.dumps(os.listdir(os.path.join(DATA_ROOT, "L1A")))
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_200
 
@@ -276,6 +298,7 @@ def main(args=sys.argv):
     api.add_route('/data/{file_name}/{variable_name}', ArrayData())
     api.add_route('/data/{file_name}/{variable_name}/{index}', ArrayDataAt())
     api.add_route('/mag/{file_name}/{rec_index}', MagnitudeAt())
+    api.add_route('/l1b/{file_name}', AttenuatorCalibratedAt())
     api.add_route('/geoloc/{file_name}', GeoLoc())
     api.add_route('/exit/{exit_code}', Exit())
     api.add_route('/info', Info())

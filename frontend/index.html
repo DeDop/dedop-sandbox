@@ -41,7 +41,7 @@
             margin-right: auto;
         }
 
-        #multiPlot {
+        #twoDimensionGraphDiv {
             width: 60%;
             position: absolute;
             top: 50%;
@@ -84,7 +84,7 @@
 
 <div id="container">
     <div id="surfaceGraphDiv"></div>
-    <div id="multiPlot"></div>
+    <div id="twoDimensionGraphDiv"></div>
     <div id="earthDiv"></div>
 </div>
 
@@ -94,8 +94,10 @@
     var selectedRecIndex = 0;
     var selectedEntity = null;
 
-    var init = false;
+    var init3D = false;
+    var init2D = false;
     var surfaceGraphDiv = null;
+    var twoDimensionGraphDiv = null;
     var viewer = null;
     var recordDataSource = null;
 
@@ -202,29 +204,38 @@
 
     function redrawPlot() {
         callServer("mag/" + selectedProductName + "/" + selectedRecIndex, function (result) {
-            //console.log(result);
-            if (!init) {
+            console.log(result);
+            if (!init3D) {
                 graphData[0].z = result;
+
+                Plotly.newPlot(surfaceGraphDiv, graphData, graphLayout);
+                init3D = true;
+            } else {
+                surfaceGraphDiv.data[0].z = result;
+                Plotly.redraw(surfaceGraphDiv);
+            }
+        });
+
+        callServer("l1b/" + selectedProductName, function (result) {
+            if (!init2D) {
                 var trace1 = {
-                    name: 'type1',
-                    x: [20, 30, 40],
-                    y: [50, 60, 70],
+                    name: 'L1B-S',
+                    y: result,
                     type: 'scatter'
                 };
                 var trace2 = {
-                    name: 'type2',
-                    x: [20, 30, 40],
-                    y: [50, 60, 70],
+                    name: 'L1B',
+                    y: result,
                     xaxis: 'x2',
                     yaxis: 'y2',
                     type: 'scatter'
                 };
-                Plotly.newPlot(surfaceGraphDiv, graphData, graphLayout);
-                Plotly.newPlot('multiPlot', [trace1,trace2], multiPlotLayout);
-                init = true;
+                Plotly.newPlot(twoDimensionGraphDiv, [trace1,trace2], multiPlotLayout);
+                init2D = true;
             } else {
-                surfaceGraphDiv.data[0].z = result;
-                Plotly.redraw(surfaceGraphDiv);
+                twoDimensionGraphDiv.data[0].y = result;
+                twoDimensionGraphDiv.data[1].y = result;
+                Plotly.redraw(twoDimensionGraphDiv);
             }
         });
     }
@@ -349,6 +360,7 @@
     $(function () {
         $('#recIndex').val(selectedRecIndex + "");
         surfaceGraphDiv = document.getElementById('surfaceGraphDiv');
+        twoDimensionGraphDiv = document.getElementById('twoDimensionGraphDiv');
 
         // Create the Cesium viewer in '#earthDiv' component.
         viewer = new Cesium.Viewer('earthDiv', {
