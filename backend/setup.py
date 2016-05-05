@@ -14,6 +14,6 @@ setup(
     },
     install_requires=['h5py >= 2.5',
                       'numpy >= 1.7',
-                      'falcon >= 0.3',
+                      'falcon == 0.3',
                       'CherryPy >= 3.8'],
 )

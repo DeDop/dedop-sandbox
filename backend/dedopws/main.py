@@ -109,15 +109,15 @@ class MagnitudeAt:
     def on_get(self, req, resp, file_name, rec_index):
         rec_index = int(rec_index)
         dataset = _get_dataset(file_name)
-        i_samples_ku = dataset['i_samples_ku'][rec_index, :]
+        i_samples_ku = dataset['look_i_samples_ku'][rec_index, :]
         i_scale_factor_ku = dataset['i_scale_factor_ku'][rec_index, :]
-        q_samples_ku = dataset['q_samples_ku'][rec_index, :]
+        q_samples_ku = dataset['look_q_samples_ku'][rec_index, :]
         q_scale_factor_ku = dataset['q_scale_factor_ku'][rec_index, :]
         data = i_samples_ku.astype('float64')
-        for i in range(len(i_scale_factor_ku)):
-            i_comp = 1e-8 * i_samples_ku[i] / i_scale_factor_ku[i]
-            q_comp = 1e-8 * q_samples_ku[i] / q_scale_factor_ku[i]
-            data[i] = numpy.sqrt(i_comp * i_comp + q_comp * q_comp)
+        for i in range(i_samples_ku.shape[1]):
+            i_comp = 1e-8 * i_samples_ku[:, i] * i_scale_factor_ku[:]
+            q_comp = 1e-8 * q_samples_ku[:, i] * q_scale_factor_ku[:]
+            data[:, i] = numpy.sqrt(i_comp * i_comp + q_comp * q_comp)
         resp.data = json.dumps(data, cls=SimpleNumpyAwareJSONEncoder)
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_200
