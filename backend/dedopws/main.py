@@ -5,7 +5,8 @@ import sys
 
 import cherrypy
 import falcon
-import h5py
+# import h5py
+import netCDF4 as nc
 import numpy
 
 from dedopws.processor import Job
@@ -66,7 +67,8 @@ def _get_dataset(file_name):
     if file_name in DATASETS:
         dataset = DATASETS[file_name]
     else:
-        dataset = h5py.File(file_path, 'r')
+        # dataset = h5py.File(file_path, 'r')
+        dataset = nc.Dataset(file_path)
         DATASETS[file_name] = dataset
     return dataset
 
@@ -93,13 +95,13 @@ def crossdomain(req, resp):
 class GeoLoc:
     def on_get(self, req, resp, file_name):
         dataset = _get_dataset(file_name)
-        lat = dataset['latitude_ku'][:]
-        lon = dataset['longitude_ku'][:]
-        scale_factor = 1.0e-7
-        lon180 = int(180 / scale_factor)
-        lon360 = int(360 / scale_factor)
-        lon[lon > lon180] -= lon360
-        geo_data = numpy.column_stack((lat * scale_factor, lon * scale_factor))
+        lat = dataset['lat_l1b_echo_sar_ku'][:]
+        lon = dataset['lon_l1b_echo_sar_ku'][:]
+        scale_factor = 1.0e-1
+        # lon180 = int(180 / scale_factor)
+        # lon360 = int(360 / scale_factor)
+        # lon[lon > lon180] -= lon360
+        geo_data = numpy.column_stack((lat * scale_factor, lon * scale_factor - 360.))
         resp.data = json.dumps(geo_data, cls=SimpleNumpyAwareJSONEncoder)
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_200
@@ -109,10 +111,10 @@ class MagnitudeAt:
     def on_get(self, req, resp, file_name, rec_index):
         rec_index = int(rec_index)
         dataset = _get_dataset(file_name)
-        i_samples_ku = dataset['look_i_samples_ku'][rec_index, :]
-        i_scale_factor_ku = dataset['i_scale_factor_ku'][rec_index, :]
-        q_samples_ku = dataset['look_q_samples_ku'][rec_index, :]
-        q_scale_factor_ku = dataset['q_scale_factor_ku'][rec_index, :]
+        i_samples_ku = dataset['echoes_i_gprw_cor_l1bS_echo_sar_ku'][rec_index, :]
+        i_scale_factor_ku = dataset['i_scale_factor_ku_echo_sar_ku'][rec_index, :]
+        q_samples_ku = dataset['echoes_q_gprw_cor_l1bS_echo_sar_ku'][rec_index, :]
+        q_scale_factor_ku = dataset['q_scale_factor_ku_echo_sar_ku'][rec_index, :]
         data = i_samples_ku.astype('float64')
         for i in range(i_samples_ku.shape[1]):
             i_comp = 1e-8 * i_samples_ku[:, i] * i_scale_factor_ku[:]
