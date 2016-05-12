@@ -16,7 +16,8 @@ const BrowserWindow = electron.BrowserWindow;  // Module to create native browse
 
 
 // Report crashes to our server.
-electron.crashReporter.start({companyName: 'Brockmann Consult GmbH'});
+// deactivated: submitURL is now required parameter, and we have no server running
+//electron.crashReporter.start({companyName: 'Brockmann Consult GmbH'});
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
