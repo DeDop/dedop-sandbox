@@ -86,8 +86,9 @@ def get_job_key(file_name, num_recs):
     return file_name + '_' + str(num_recs)
 
 
-def crossdomain(req, resp):
-    resp.set_header('Access-Control-Allow-Origin', '*')
+class CrossDomain(object):
+    def process_response(self, req, resp, resource):
+        resp.set_header('Access-Control-Allow-Origin', '*')
 
 
 class GeoLoc:
@@ -268,7 +269,7 @@ def serve_forever(data_dir, blocking=True):
     print('DATA_ROOT = %s' % DATA_ROOT)
 
     # Create instance of our DeDop RESTful API called 'api', which is a WSGI application instance.
-    api = falcon.API(after=[crossdomain])
+    api = falcon.API(middleware=[CrossDomain()])
     api.add_route('/job/{file_name}/{num_recs}', JobResource())
     api.add_route('/job/{file_name}/{num_recs}/cancel', JobCancellation())
     api.add_route('/list', ListFiles())

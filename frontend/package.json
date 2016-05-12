@@ -16,6 +16,7 @@
     "request-promise": "~1.0.2"
   },
   "devDependencies": {
-    "electron-prebuilt": "^0.37.2"
+    "electron-prebuilt": "^1.0.1",
+    "cesium": "1.21"
   }
 }
